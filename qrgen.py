@@ -48,9 +48,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     enc = {
-        'byte': ENC_OCTET,
-        'alpha': ENC_ALPHANUMERIQUE,
-        'num': ENC_NUMERIQUE,
+        'byte': ENC_BYTE,
+        'alpha': ENC_ALPHANUMERIC,
+        'num': ENC_NUMERIC,
         'kanji': ENC_KANJI,
     }[args.enc]
 
@@ -61,11 +61,11 @@ if __name__ == "__main__":
         'H': MODE_H,
     }[args.mode]
 
-    img = creer_qr(args.string, mode, args.mask, enc)
+    img = make_qr_code(args.string, mode, args.mask, enc)
 
     if args.scale > 1:
-        taille = args.scale * 21
-        img = img.resize((taille, taille))
+        size = args.scale * 21
+        img = img.resize((size, size))
 
     if args.file is not None:
         img.save(args.file)
