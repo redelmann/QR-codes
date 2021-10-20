@@ -111,4 +111,4 @@ class Encoder(object):
     def encode(self, data):
         padded = data + [0] * (len(self.generator) - 1)
         _, extra = self.poly_ring.division(padded, self.generator)
-        return data + extra
+        return extra

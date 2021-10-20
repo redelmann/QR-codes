@@ -44,6 +44,13 @@ if __name__ == "__main__":
         default=10,
         nargs='?',
         help='scale factor')
+    parser.add_argument('--version',
+        metavar='V',
+        type=int,
+        const=1,
+        default=1,
+        nargs='?',
+        help='QR version')
 
     args = parser.parse_args()
 
@@ -61,11 +68,11 @@ if __name__ == "__main__":
         'H': MODE_H,
     }[args.mode]
 
-    img = make_qr_code(args.string, mode, args.mask, enc)
+    img = make_qr_code(args.string, mode, args.mask, enc, args.version)
 
     if args.scale > 1:
-        size = args.scale * 21
-        img = img.resize((size, size), resample=Image.BOX)
+        width, height = img.size
+        img = img.resize((args.scale * width, args.scale * height), resample=Image.BOX)
 
     if args.file is not None:
         img.save(args.file)
