@@ -7,8 +7,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 def show_color(img, i, j, color):
-    if i >= 0 and i < 21 and j >= 0 and j < 21:
-        img.putpixel((i, j), color)
+    img.putpixel((i, j), color)
 
 def free_pixel(img, i, j):
     return img.getpixel((i, j)) == RED
@@ -33,7 +32,11 @@ def show_finder_pattern(img, i, j):
             elif (dj == 2 or dj == 6) and di != 1 and di != 7:
                 color = WHITE
 
-            show_color(img, i - 1 + di, j - 1 + dj, color)
+            ti = i - 1 + di
+            tj = j - 1 + dj
+
+            if ti >= 0 and ti < 21 and tj >= 0 and tj < 21:
+                show_color(img, i - 1 + di, j - 1 + dj, color)
 
 def show_format(img, data):
     for k in range(6):
