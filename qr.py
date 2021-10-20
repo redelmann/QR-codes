@@ -81,8 +81,8 @@ def up(i, j):
     return [(i + 1 - di, j + 3 - dj) for dj in range(4) for di in range(2)]
 
 def up_special(i, j):
-    high = [(i + 1 - di, j + 4 - dj) for dj in range(2) for di in range(2)]
-    low = [(i + 1 - di, j + 1 - dj) for dj in range(2) for di in range(2)]
+    low = [(i + 1 - di, j + 4 - dj) for dj in range(2) for di in range(2)]
+    high = [(i + 1 - di, j + 1 - dj) for dj in range(2) for di in range(2)]
     return low + high
 
 def down(i, j):
