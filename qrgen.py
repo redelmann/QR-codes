@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     if args.scale > 1:
         size = args.scale * 21
-        img = img.resize((size, size))
+        img = img.resize((size, size), resample=Image.BOX)
 
     if args.file is not None:
         img.save(args.file)

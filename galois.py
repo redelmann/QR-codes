@@ -24,6 +24,7 @@ def modulo(a, irreducible):
     return a
 
 class GaloisField(object):
+    """Galois field specified by an irreducible polynomial over GF(2)."""
 
     def __init__(self, irreducible=0b100011101):
         size_irr = size(irreducible)
@@ -64,6 +65,7 @@ class GaloisField(object):
 
 
 class PolyRing(object):
+    """Polynomial commutative ring over a field."""
 
     def __init__(self, field):
         self.field = field

@@ -2,47 +2,52 @@ from PIL import Image
 
 from galois import *
 
-def show_white(img, i, j):
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+def show_color(img, i, j, color):
     if i >= 0 and i < 21 and j >= 0 and j < 21:
-        img.putpixel((i, j), 1)
+        img.putpixel((i, j), color)
+
+def free_pixel(img, i, j):
+    return img.getpixel((i, j)) == RED
+
+def bit_color(bit):
+    if bit == 0:
+        return WHITE
+    else:
+        return BLACK
 
 def show_finder_pattern(img, i, j):
-    for k in range(5):
-        show_white(img, i + 1, j + 1 + k)
-    for k in range(5):
-        show_white(img, i + 5, j + 1 + k)
-    for k in range(5):
-        show_white(img, i + 1 + k, j + 1)
-    for k in range(5):
-        show_white(img, i + 1 + k, j + 5)
-    for k in range(9):
-        show_white(img, i - 1, j - 1 + k)
-    for k in range(9):
-        show_white(img, i + 7, j - 1 + k)
-    for k in range(9):
-        show_white(img, i - 1 + k, j - 1)
-    for k in range(9):
-        show_white(img, i - 1 + k, j + 7)
+    for di in range(9):
+        for dj in range(9):
+            color = BLACK
+
+            if di == 0 or di == 8:
+                color = WHITE
+            elif dj == 0 or dj == 8:
+                color = WHITE
+            elif (di == 2 or di == 6) and dj != 1 and dj != 7:
+                color = WHITE
+            elif (dj == 2 or dj == 6) and di != 1 and di != 7:
+                color = WHITE
+
+            show_color(img, i - 1 + di, j - 1 + dj, color)
 
 def show_format(img, data):
     for k in range(6):
-        if data[k] == 0:
-            show_white(img, k, 8)
+        show_color(img, k, 8, bit_color(data[k]))
     for k in range(2):
-        if data[6 + k] == 0:
-            show_white(img, 7 + k, 8)
-    if data[8] == 0:
-        show_white(img, 8, 7)
+        show_color(img, 7 + k, 8, bit_color(data[6 + k]))
+    show_color(img, 8, 7, bit_color(data[8]))
     for k in range(6):
-        if data[9 + k] == 0:
-            show_white(img, 8, 5 - k)
+        show_color(img, 8, 5 - k, bit_color(data[9 + k]))
 
     for k in range(7):
-        if data[k] == 0:
-            show_white(img, 8, 20 - k)
+        show_color(img, 8, 20 - k, bit_color(data[k]))
     for k in range(8):
-        if data[7 + k] == 0:
-            show_white(img, 13 + k, 8)
+        show_color(img, 13 + k, 8, bit_color(data[7 + k]))
 
 MODE_M = 0
 MODE_L = 1
@@ -77,53 +82,11 @@ def apply_mask(mask, i, j, bit):
     m = 1 if MASKS[mask](i, j) == 0 else 0
     return bit ^ m
 
-def up(i, j):
-    return [(i + 1 - di, j + 3 - dj) for dj in range(4) for di in range(2)]
-
-def up_special(i, j):
-    low = [(i + 1 - di, j + 4 - dj) for dj in range(2) for di in range(2)]
-    high = [(i + 1 - di, j + 1 - dj) for dj in range(2) for di in range(2)]
-    return low + high
-
-def down(i, j):
-    return [(i + 1 - di, j + dj) for dj in range(4) for di in range(2)]
-
-def down_special(i, j):
-    high = [(i + 1 - di, j + dj) for dj in range(2) for di in range(2)]
-    low = [(i + 1 - di, j + 3 + dj) for dj in range(2) for di in range(2)]
-    return high + low
-
-BITS_POSITIONS = [bit for bits in [
-    up(19, 17),
-    up(19, 13),
-    up(19, 9),
-    down(17, 9),
-    down(17, 13),
-    down(17, 17),
-    up(15, 17),
-    up(15, 13),
-    up(15, 9),
-    down(13, 9),
-    down(13, 13),
-    down(13, 17),
-    up(11, 17),
-    up(11, 13),
-    up(11, 9),
-    up_special(11, 4),
-    up(11, 0),
-    down(9, 0),
-    down_special(9, 4),
-    down(9, 9),
-    down(9, 13),
-    down(9, 17),
-    up(7, 9),
-    down(4, 9),
-    up(2, 9),
-    down(0, 9),
-] for bit in bits]
-
-def to_bits(byte, size=8):
-    return [1 if byte & (1 << (size - 1 - i)) else 0 for i in range(size)]
+def to_bits(byte, size):
+    bits = []
+    for i in range(size):
+        bits.append((byte >> ((size - 1) - i)) & 1)
+    return bits
 
 def to_value(bits):
     r = 0
@@ -132,15 +95,30 @@ def to_value(bits):
         r = r + bit
     return r
 
-def show_data(img, data, masque):
-    assert(len(data) * 8 == len(BITS_POSITIONS))
-    bits = [bit for byte in data for bit in to_bits(byte)]
+def show_data(img, data, mask):
+    bits = []
+    for byte in data:
+        bits.extend(to_bits(byte, 8))
 
-    for (bit, position) in zip(bits, BITS_POSITIONS):
-        (i, j) = position
-        v = apply_mask(masque, i, j, bit)
-        if v == 0:
-            show_white(img, i, j)
+    for k in range(10):
+        si = 20 - k * 2
+
+        # Skip vertical timer pattern.
+        if si <= 6:
+            si = si - 1
+
+        for j in range(21):
+            if k % 2 == 0:
+                # Up column
+                j = 20 - j
+
+            for di in range(2):
+                i = si - di
+
+                if free_pixel(img, i, j):
+                    bit = apply_mask(mask, i, j, bits.pop(0))
+                    show_color(img, i, j, bit_color(bit))
+
 
 ENC_NUMERIC = 0
 ENC_ALPHANUMERIC = 1
@@ -152,7 +130,6 @@ ENC_CODE = [
     to_bits(2, 4),
     to_bits(4, 4),
     to_bits(8, 4),
-    to_bits(7, 4),
 ]
 
 ENC_LENGTH_BITS = [
@@ -170,15 +147,15 @@ def encode_numeric(message):
     bits = []
     while len(message) > 0:
         k = min(len(message), 3)
-        partie = int(message[:k])
+        part = int(message[:k])
         message = message[k:]
 
         if k == 1:
-            bits.extend(to_bits(partie, 4))
+            bits.extend(to_bits(part, 4))
         elif k == 2:
-            bits.extend(to_bits(partie, 7))
+            bits.extend(to_bits(part, 7))
         else:
-            bits.extend(to_bits(partie, 10))
+            bits.extend(to_bits(part, 10))
     return bits
 
 def encode_alphanumeric(message):
@@ -196,15 +173,15 @@ def encode_alphanumeric(message):
     bits = []
     while len(message) > 0:
         k = min(len(message), 2)
-        partie = message[:k]
+        part = message[:k]
         message = message[k:]
 
         if k == 2:
-            a = encode_char(partie[0]) * 45
-            b = encode_char(partie[1])
+            a = encode_char(part[0]) * 45
+            b = encode_char(part[1])
             bits.extend(to_bits(a + b, 11))
         else:
-            a = encode_char(partie[0])
+            a = encode_char(part[0])
             bits.extend(to_bits(a, 6))
     return bits
 
@@ -212,7 +189,7 @@ def encode_bytes(message):
     try:
         bits = []
         for byte in message.encode("iso-8859-1"):
-            bits.extend(to_bits(byte))
+            bits.extend(to_bits(byte, 8))
         return bits
     except:
         raise ValueError("Invalid!") from None
@@ -252,8 +229,8 @@ ENC_FONCTIONS = [
 ]
 
 PAD_BITS = [
-    to_bits(236),
-    to_bits(17),
+    to_bits(236, 8),
+    to_bits(17, 8),
 ]
 
 def encode_message(message, mode, enc):
@@ -291,14 +268,26 @@ def encode_message(message, mode, enc):
     return encoder.encode(octets)
 
 def make_qr_code(message, mode, mask, enc):
-    img = Image.new(mode="1", size=(21,21))
+    img = Image.new(mode="RGB", size=(21,21), color=RED)
     show_finder_pattern(img, 0, 0)
     show_finder_pattern(img, 14, 0)
     show_finder_pattern(img, 0, 14)
-    show_white(img, 6, 9)
-    show_white(img, 6, 11)
-    show_white(img, 9, 6)
-    show_white(img, 11, 6)
+
+    # Timer patterns
+    show_color(img, 6, 8, BLACK)
+    show_color(img, 6, 9, WHITE)
+    show_color(img, 6, 10, BLACK)
+    show_color(img, 6, 11, WHITE)
+    show_color(img, 6, 12, BLACK)
+    show_color(img, 8, 6, BLACK)
+    show_color(img, 9, 6, WHITE)
+    show_color(img, 10, 6, BLACK)
+    show_color(img, 11, 6, WHITE)
+    show_color(img, 12, 6, BLACK)
+
+    # Black module
+    show_color(img, 8, 13, BLACK)
+
     show_format(img, format(mode, mask))
     data = encode_message(message, mode, enc)
     show_data(img, data, mask)
