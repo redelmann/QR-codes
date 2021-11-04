@@ -26,7 +26,7 @@ def modulo(a, irreducible):
 class GaloisField(object):
     """Galois field specified by an irreducible polynomial over GF(2)."""
 
-    def __init__(self, irreducible=0b100011101):
+    def __init__(self, irreducible):
         size_irr = size(irreducible)
         self.modulus = (2 ** (size_irr - 1)) - 1
         self.exps = [0] * self.modulus
@@ -104,9 +104,9 @@ class PolyRing(object):
 
 class Encoder(object):
 
-    def __init__(self, poly_ring, n_extra):
-        self.poly_ring = poly_ring
-        self.generator = poly_ring.generator(n_extra)
+    def __init__(self, n_extra, irreducible):
+        self.poly_ring = PolyRing(GaloisField(irreducible))
+        self.generator = self.poly_ring.generator(n_extra)
 
     def encode(self, data):
         padded = data + [0] * (len(self.generator) - 1)

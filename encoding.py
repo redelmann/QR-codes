@@ -144,7 +144,7 @@ def encode_message(message, mode, enc, version):
         bits.extend(PAD_BITS[i])
         i = (i + 1) % 2
 
-    encoder = Encoder(PolyRing(GaloisField()), corr_length)
+    encoder = Encoder(corr_length, 0b100011101)
 
     data_blocks = []
     corr_blocks = []

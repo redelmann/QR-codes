@@ -130,9 +130,9 @@ def make_qr_code(message, mode, mask, enc, version):
     if version is None:
         version = 1
         target = len(message)
-        while capacity(version, mode, enc) < target and version < 41:
+        while version < 40 and capacity(version, mode, enc) < target:
             version += 1
-        if version > 40:
+        if capacity(version, mode, enc) < target:
             raise ValueError("Message too long, " +
                 "impossible to find a suitable version.")
 

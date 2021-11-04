@@ -69,6 +69,13 @@ if __name__ == "__main__":
         default=1,
         nargs='?',
         help='logo scale factor')
+    parser.add_argument('--margin',
+        metavar='M',
+        type=int,
+        const=0,
+        default=0,
+        nargs='?',
+        help='margin around the QR code, i.e. quiet zone')
 
     args = parser.parse_args()
 
@@ -119,6 +126,17 @@ if __name__ == "__main__":
 
         white.paste(logo, (x - x_white, y - y_white), logo)
         img.paste(white, (x_white, y_white))
+
+    if args.margin > 0:
+        width, height = img.size
+
+        white = Image.new(
+            mode="RGB",
+            size=(width + 2 * args.margin, height + 2 * args.margin),
+            color=WHITE)
+
+        white.paste(img, (args.margin, args.margin))
+        img = white
 
     if args.file is not None:
         img.save(args.file)
