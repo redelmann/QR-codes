@@ -1,6 +1,8 @@
-RED = (255, 0, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+RED = (255, 0, 0, 255)
+WHITE = (255, 255, 255, 255)
+BLACK = (0, 0, 0, 255)
+
+MAX_VERSION = 40
 
 MODE_M = 0
 MODE_L = 1
@@ -349,10 +351,10 @@ def capacity(version, mode, enc):
     return n_sym
 
 ENC_CODE = [
-    [0, 0, 0, 1],
-    [0, 0, 1, 0],
-    [0, 1, 0, 0],
-    [1, 0, 0, 0],
+    0b0001,
+    0b0010,
+    0b0100,
+    0b1000,
 ]
 
 def enc_length_bits(version, enc):

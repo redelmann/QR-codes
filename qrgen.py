@@ -3,7 +3,6 @@ import sys
 
 from qr import *
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='QR codes generator.')
     parser.add_argument('string',
@@ -76,9 +75,17 @@ if __name__ == "__main__":
         default=0,
         nargs='?',
         help='margin around the QR code, i.e. quiet zone')
+    parser.add_argument('--target',
+        metavar='F',
+        type=str,
+        const=None,
+        default=None,
+        nargs='?',
+        help='target file')
 
     args = parser.parse_args()
 
+    # Encoding for the message.
     enc = {
         'byte': ENC_BYTE,
         'alpha': ENC_ALPHANUMERIC,
@@ -86,6 +93,7 @@ if __name__ == "__main__":
         'kanji': ENC_KANJI,
     }[args.enc]
 
+    # Error correction level.
     mode = {
         'L': MODE_L,
         'M': MODE_M,
@@ -93,16 +101,64 @@ if __name__ == "__main__":
         'H': MODE_H,
     }[args.mode]
 
+    # Read the message.
     message = args.string
     if message is None:
         message = sys.stdin.read()
 
-    img = make_qr_code(message, mode, args.mask, enc, args.version)
+    # Version number.
+    version = args.version
 
+    # Mask.
+    mask = args.mask
+
+    # Determine desired padding bytes, if any.
+    # This is done so that we can display images
+    # within the QR code by abusing the padding.
+    if args.target is None:
+        pads = None
+    else:
+        # Read the image.
+        target_img = Image.open(args.target)
+
+        # Ensure the image is square.
+        if target_img.width != target_img.height:
+            raise ValueError("Target image not square.")
+
+        # Ensure the image has size compatible with a QR code.
+        n = target_img.width - 17
+        if n % 4 != 0:
+            raise ValueError("Target image not of correct dimension.")
+
+        # Find the QR version given the dimensions.
+        target_version = n // 4
+        if not (1 <= target_version <= MAX_VERSION):
+            raise ValueError("Target image not of correct dimension.")
+
+        # Ensure that specified version (if any) and target version match.
+        if version is not None and target_version != version:
+            raise ValueError("Target image not of correct dimension.")
+        
+        # Use the target version.
+        version = target_version
+        
+        # Create a template QR code (without data modules)
+        # to be able to determine the position of the data modules.
+        template_img = make_qr_template(mode, mask, version)
+
+        # Read the target bytes.
+        import read
+        pads = read.read_data(target_img, template_img, mask)
+    
+    # Create the QR code.
+    img = make_qr_code(message, mode, mask, enc, version, pads)
+
+    # Scale the size of QR code.
     if args.scale > 1:
         width, height = img.size
         img = img.resize((args.scale * width, args.scale * height), resample=Image.BOX)
 
+    # Add a logo in the center.
     if args.logo is not None:
         logo = Image.open(args.logo)
         img_width, img_height = img.size
@@ -127,6 +183,7 @@ if __name__ == "__main__":
         white.paste(logo, (x - x_white, y - y_white), logo)
         img.paste(white, (x_white, y_white))
 
+    # Add margins.
     if args.margin > 0:
         width, height = img.size
 
@@ -138,6 +195,7 @@ if __name__ == "__main__":
         white.paste(img, (args.margin, args.margin))
         img = white
 
+    # Output the QR code image.
     if args.file is not None:
         img.save(args.file)
     else:
