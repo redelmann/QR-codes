@@ -12,7 +12,6 @@ def show_color(img, i, j, color):
 
 def is_free_pixel(img, i, j):
     """Return True if and only if the pixel at (i, j) is free."""
-    print("is_free_pixel", i, j, img.getpixel((i, j)) == RED)
     return img.getpixel((i, j)) == RED
 
 def bit_color(bit):
@@ -143,11 +142,9 @@ def show_data(img, encoded_data, mask):
 
     # Display the data modules.
     for byte in encoded_data:
-        print(byte)
         for i in range(8):
             b = bit(byte, 7 - i)
             (x, y) = next(positions)
-            print(x, y)
             color = bit_color(apply_mask(mask, x, y, b))
             show_color(img, x, y, color)
     
