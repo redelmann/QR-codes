@@ -22,6 +22,11 @@ def read_data(img, template, mask):
         bits_len += 1
         bits ^= bit
 
+    extra = bits_len % 8
+    if extra != 0:
+        bits >>= extra
+        bits_len -= extra
+        
     # Convert the bits to bytes.
     bytes = []
     while bits_len >= 8:

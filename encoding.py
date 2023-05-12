@@ -195,13 +195,12 @@ def encode_message(message, mode, enc, version, pads=None):
 
         # Pad the message.
         i = 0
-        while len(bits) != required:
-            if pads is not None:
-                n = pad_map[start_pads + i]
-                bits <<= 8
-                bits_len += 8
-                bits ^= pads[n]
-                i = i + 1
+        while bits_len != required:
+            n = pad_map[start_pads + i]
+            bits <<= 8
+            bits_len += 8
+            bits ^= pads[n]
+            i = i + 1
 
     # Add error correction modules.
     encoder = Encoder(corr_length, 0b100011101)
